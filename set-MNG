@@ -1,0 +1,34 @@
+/interface bridge
+add name=loopback
+add name=lo-net
+
+#ether10,ether11,ether12 disesuaikan
+/interface bonding
+add mode=802.3ad name=bond1 slaves=ether10,ether11,ether12 transmit-hash-policy=layer-2-and-3
+
+/interface vlan
+add interface=bond1 mtu=1496 name=vl-1001 vlan-id=1001
+
+/ip address
+add address=103.157.63.17/28 interface=lo-net
+add address=172.31.255.254 comment=Loopback interface=loopback network=172.31.255.254
+add address=172.31.254.2/30 comment=PTP-to-MNG interface=vl-1001 network=172.31.254.0
+
+/routing ospf instance
+ro osp ins set 0 router-id=172.31.255.254
+
+/routing ospf area
+add disabled=no instance=ospf-MNG-MGT name=backbone
+
+/routing ospf network
+add area=backbone network=172.31.254.0/30
+
+#103.157.63.1/32 sesuaikan ip publicnya
+add area=backbone network=103.157.63.1/32
+
+/ro osp interf add interface=vl-1001 cost=100
+/ro osp interf add interface=lo-net passive=yes
+
+#103.157.63.1 sesuaikan ip publicnya
+/ip firewall nat
+add action=samne chain=srcnat out-interface=bond1 to-addresses=103.157.63.1
