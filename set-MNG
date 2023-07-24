@@ -26,7 +26,7 @@ add area=backbone network=172.31.254.0/30
 #103.157.63.1/32 sesuaikan ip publicnya
 add area=backbone network=103.157.63.1/32
 
-/ro osp interf add interface=vl-1001 cost=100
+/ro osp interf add interface=vl-1001 cost=100 network-type=point-to-point
 /ro osp interf add interface=lo-net passive=yes
 
 #103.157.63.1 sesuaikan ip publicnya
