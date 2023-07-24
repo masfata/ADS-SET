@@ -22,7 +22,6 @@ add disabled=no instance=ospf-MNG-MGT name=backbone
 
 /routing ospf network
 add area=backbone network=172.31.254.0/30
-
 add area=backbone network=103.157.63.16/28
 
 /ro osp interf add interface=vl-1001 cost=100 network-type=point-to-point
@@ -30,4 +29,4 @@ add area=backbone network=103.157.63.16/28
 
 
 /ip firewall nat
-add action=samne chain=srcnat out-interface=bond1 to-addresses=103.157.63.16/28
+add action=samne chain=srcnat out-interface=vl-1001 to-addresses=103.157.63.16/28
