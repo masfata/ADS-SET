@@ -1,17 +1,17 @@
 /interface bridge
 add name=loopback
 /interface ethernet
-set [ find default-name=sfp-sfpplus1 ] name="sfp-sfpplus1 IPT ADS WNRJ"
-set [ find default-name=sfp-sfpplus4 ] l2mtu=9000 mtu=9000 name="sfp-sfpplus4 DISTRIBUSI"
+set [ find default-name=sfp-sfpplus1 ] name="sfp-sfpplus1 comment="IPT ADS WNRJ""
+set [ find default-name=sfp-sfpplus4 ] name="sfp-sfpplus4 comment=DISTRIBUSI"
 
 /interface vlan
-add interface="sfp-sfpplus4 DISTRIBUSI" name=vl-1001 vlan-id=1001
+add interface=sfp-sfpplus4" comment=DISTRIBUSI name=vl-1001 vlan-id=1001
 /interface list
 add name=MNG
 /interface list member
 add interface=ether1 list=MNG
 /ip address
-add address=103.87.184.97 interface="sfp-sfpplus1 IPT ADS WNRJ" network=103.87.184.96
+add address=103.87.184.97 interface="sfp-sfpplus1 comment="IPT ADS WNRJ"" network=103.87.184.96
 add address=103.157.63.1 interface=loopback network=103.157.63.1
 add address=172.31.255.255 comment=Loopback interface=loopback network=172.31.255.255
 add address=172.31.254.1/30 comment=PTP-to-MNG interface=vl-1001 network=172.31.254.0
@@ -20,9 +20,9 @@ add address=103.157.63.248/30 interface=ether1 network=103.157.63.248
 add address=103.157.63.0/24 list=OUT-NETWORK
 
 /ip firewall filter
-add action=drop chain=input comment="BLOCK DNS WAN" dst-port=53 in-interface="sfp-sfpplus1 IPT ADS WNRJ" protocol=tcp
-add action=drop chain=input dst-port=53 in-interface="sfp-sfpplus1 IPT ADS WNRJ" protocol=udp
-add action=add-src-to-address-list address-list=PSD address-list-timeout=none-static chain=input comment=PSD in-interface="sfp-sfpplus1 IPT ADS WNRJ" protocol=tcp psd=\
+add action=drop chain=input comment="BLOCK DNS WAN" dst-port=53 in-interface=sfp-sfpplus1 comment="IPT ADS WNRJ" protocol=tcp
+add action=drop chain=input dst-port=53 in-interface=sfp-sfpplus1 comment="IPT ADS WNRJ" protocol=udp
+add action=add-src-to-address-list address-list=PSD address-list-timeout=none-static chain=input comment=PSD in-interface="sfp-sfpplus1 comment="IPT ADS WNRJ"" protocol=tcp psd=\
     4,3s,3,1
 add action=drop chain=input src-address-list=PSD
 add action=drop chain=forward comment="BLOCK SPAM" protocol=tcp src-port=25,143,587,465,110,995,50942,49961,445
