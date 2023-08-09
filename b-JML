@@ -1,0 +1,97 @@
+/interface bridge
+add name=loopback
+/interface ethernet
+set [ find default-name=sfp-sfpplus1 ] name="sfp-sfpplus1 IPT ADS WNRJ"
+set [ find default-name=sfp-sfpplus4 ] l2mtu=9000 mtu=9000 name="sfp-sfpplus4 DISTRIBUSI"
+
+/interface vlan
+add interface="sfp-sfpplus4 DISTRIBUSI" name=vl-1001 vlan-id=1001
+/interface list
+add name=MNG
+/interface list member
+add interface=ether1 list=MNG
+/ip address
+add address=103.87.184.97 interface="sfp-sfpplus1 IPT ADS WNRJ" network=103.87.184.96
+add address=103.157.63.1 interface=loopback network=103.157.63.1
+add address=172.31.255.255 comment=Loopback interface=loopback network=172.31.255.255
+add address=172.31.254.1/30 comment=PTP-to-MNG interface=vl-1001 network=172.31.254.0
+add address=103.157.63.248/30 interface=ether1 network=103.157.63.248
+/ip firewall address-list
+add address=103.157.63.0/24 list=OUT-NETWORK
+
+/ip firewall filter
+add action=drop chain=input comment="BLOCK DNS WAN" dst-port=53 in-interface="sfp-sfpplus1 IPT ADS WNRJ" protocol=tcp
+add action=drop chain=input dst-port=53 in-interface="sfp-sfpplus1 IPT ADS WNRJ" protocol=udp
+add action=add-src-to-address-list address-list=PSD address-list-timeout=none-static chain=input comment=PSD in-interface="sfp-sfpplus1 IPT ADS WNRJ" protocol=tcp psd=\
+    4,3s,3,1
+add action=drop chain=input src-address-list=PSD
+add action=drop chain=forward comment="BLOCK SPAM" protocol=tcp src-port=25,143,587,465,110,995,50942,49961,445
+add action=drop chain=forward dst-port=25,143,587,465,110,995,50942,49961,445 protocol=tcp
+add action=drop chain=forward protocol=udp src-port=25,143,587,465,110,995,50942,49961,445
+add action=drop chain=forward dst-port=25,143,587,465,110,995,50942,49961,445 protocol=udp
+
+/routing id
+add disabled=no id=172.31.255.255 name=id-core-MGT select-dynamic-id=""
+add disabled=no id=103.157.63.1 name=ospf-id select-dynamic-id=""
+/routing ospf instance
+add disabled=no in-filter-chain=ospf-in name=def out-filter-chain=ospf-out router-id=id-core-MGT
+/routing ospf area
+add disabled=no instance=def name=backbone
+/routing bgp template
+set default disabled=yes routing-table=main
+add address-families=ip as=149976 disabled=no name="BGP IPv4 MANGANTI" router-id=103.157.63.1 routing-table=main
+/ip firewall connection tracking
+set enabled=no
+/ip neighbor discovery-settings
+set discover-interface-list=MNG
+
+/routing filter rule
+add chain=FS-IN comment=IPT disabled=no rule="jump bogon;"
+add chain=FS-IN rule="if(protocol bgp && dst-len <=24) {accept; } "
+add chain=FS-OUT disabled=no rule="if(dst==103.157.63.0/24){accept}"
+add chain=FS-OUT disabled=no rule=reject
+add chain=bogon disabled=no rule="if(dst in 0.0.0.0/8 && dst-len in 8-32){reject}"
+add chain=bogon disabled=no rule="if(dst in 127.0.0.0/8 && dst-len in 8-32){reject}"
+add chain=bogon disabled=no rule="if(dst in 10.0.0.0/8 && dst-len in 8-32){reject}"
+add chain=bogon disabled=no rule="if(dst in 169.254.0.0/16 && dst-len in 16-32){reject}"
+add chain=bogon disabled=no rule="if(dst in 172.16.0.0/12 && dst-len in 12-32){reject}"
+add chain=bogon disabled=no rule="if(dst in 192.168.0.0/16 && dst-len in 16-32){reject}"
+add chain=bogon disabled=no rule="if(dst in 100.64.0.0/10 && dst-len in 10-32){reject}"
+add chain=bogon disabled=no rule="if(dst in 192.0.0.0/24 && dst-len in 24-32){reject}"
+add chain=bogon disabled=no rule="if(dst in 192.0.2.0/24 && dst-len in 24-32){reject}"
+add chain=bogon disabled=no rule="if(dst in 169.254.0.0/16 && dst-len in 16-32){reject}"
+add chain=bogon disabled=no rule="if(dst in 172.16.0.0/12 && dst-len in 12-32){reject}"
+add chain=bogon disabled=no rule="if(dst in 192.168.0.0/16 && dst-len in 16-32){reject}"
+add chain=bogon disabled=no rule="if(dst in 100.64.0.0/10 && dst-len in 10-32){reject}"
+add chain=bogon disabled=no rule="if(dst in 192.0.0.0/24 && dst-len in 24-32){reject}"
+add chain=bogon disabled=no rule="if(dst in 192.0.2.0/24 && dst-len in 24-32){reject}"
+add chain=bogon disabled=no rule="if(dst in 198.51.100.0/24 && dst-len in 24-32){reject}"
+add chain=bogon disabled=no rule="if(dst in 198.18.0.0/15 && dst-len in 15-32){reject}"
+add chain=bogon disabled=no rule="if(dst in 203.0.113.0/24 && dst-len in 24-32){reject}"
+add chain=bogon disabled=no rule="if(dst in 224.0.0.0/3 && dst-len in 3-32){reject}"
+add chain=bogon disabled=no rule="if(dst in 240.0.0.0/4 && dst-len in 4-32){reject}"
+add chain=bogon disabled=no rule="if(dst in 255.255.255.255 && dst-len in 4-32){reject}"
+add chain=bogon disabled=no rule="if(dst-len in 25-32 ){reject}"
+add chain=ospf-in disabled=no rule="if( protocol ospf ){accept }"
+add chain=ospf-out disabled=no rule="if(dst in 172.31.254.0/30 && dst-len>=30) {accept; }"
+add chain=ospf-out disabled=no rule="if(dst in 103.157.63.1/32 && dst-len==32){accept}"
+add chain=ospf-out disabled=no rule="if(dst in 172.31.255.255/32 && dst-len==32) {accept; }"
+add chain=ibgp-in disabled=yes rule="accept;"
+add chain=ibgp-out disabled=yes rule="if (dst == 0.0.0.0/0) { accept }"
+add chain=ibgp-out disabled=yes rule="if ( protocol connected ) { accept }"
+add chain=ibgp-out disabled=yes rule="reject;"
+/ip route
+add blackhole comment=blackhole disabled=no dst-address=103.157.63.0/24 suppress-hw-offload=yes
+
+/routing ospf interface-template
+add area=backbone disabled=no interfaces=loopback passive
+add area=backbone cost=10 disabled=no interfaces=vl-1001 networks=172.31.254.0/30
+/system identity
+set name="CORE BGP MANGANTI"
+
+/routing bgp connection
+add address-families=ip as=149976 cisco-vpls-nlri-len-fmt=auto-bits disabled=no input.filter=FS-IN local.address=103.87.184.97 .role=ebgp name="BGP IPv4" \
+    output.filter-chain=FS-OUT .network=OUT-NETWORK .remove-private-as=yes remote.address=103.87.184.96/31 .as=136106 router-id=103.157.63.1 routing-table=main templates=\
+    "BGP IPv4 MANGANTI"
+
+
